@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# Declare processes
+DECOMPOSE_PROCESSES+=( "create_database" "create_user" "mysql" )
+
+__mysql="mysql -h 127.0.0.1 -ppassword"
+__mysql_root="$__mysql -u root"
+
+_decompose-process-mysql() {
+  local u="$1"
+  if [ -z "$u" ]; then
+    $__mysql_root
+  else
+    $__mysql -u "$u"
+  fi
+}
+_decompose-process-mysql_help() {
+  echo "  Run mysql client"
+  echo "    PARAM 1 username (OPTIONAL)"
+}
+
+_decompose-process-create_database() {
+  # Make parameter includes database
+  local d="$1"
+  if [ -z "$d" ]; then
+    echo "Please enter database name for parameter 1"
+    exit 1
+  fi
+
+  # Check to see if database exists
+  # Create database
+  $__mysql_root -e "CREATE DATABASE IF NOT EXISTS $d CHARACTER SET utf8 COLLATE utf8_general_ci";
+}
+_decompose-process-create_database_help() {
+  echo "  Create database"
+  echo "    PARAM 1: database name"          
+}
+
+_decompose-process-create_user() {
+  # Make parameter includes:
+  #   - username
+  local username="$1"
+  if [ -z "$username" ]; then
+    echo "Please enter username for parameter 1"
+    exit 1
+  fi
+  #   - database
+  local database="$2"
+  if [ -z "$database" ]; then
+    echo "Please enter database name for parameter 3"
+    exit 1
+  fi
+
+  # Create user if not exists
+  $__mysql_root -e "CREATE USER IF NOT EXISTS $username@'%' IDENTIFIED BY 'password';"
+
+  # Set permissions for database for username if not set already
+  $__mysql_root -e \
+    "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES
+     ON $database.* TO '$username'@'%' IDENTIFIED BY 'password';"
+
+  echo "User '$username' created with password 'password' and access to '$database' database"
+}
+_decompose-process-create_user_help() {
+  echo "  Create user with access to database"
+  echo "  All users created with password 'password'"
+  echo "    PARAM 1: username"
+  echo "    PARAM 2: database name"
+}
+
+# vim:syntax=sh tabstop=2 shiftwidth=2 expandtab

@@ -1,0 +1,14 @@
+version: '2'
+services:
+  mariadb:
+    image: mariadb
+    command: mysqld --innodb-buffer-pool-size=1G
+    volumes:
+      - "./mysqld_data:/var/lib/mysql:rw"
+    environment:
+      #      - "MYSQL_DATABASE=my_db_name"
+      #      - "MYSQL_USER=my_db_user"
+      #      - "MYSQL_PASSWORD=my_db_user_passwd"
+      - "MYSQL_ROOT_PASSWORD=password"
+    ports:
+      - "3306:3306"
